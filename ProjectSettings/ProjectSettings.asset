@@ -750,10 +750,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 106ceed8-0206-4f70-bd49-7220bb798f06
+  cloudProjectId: 345437c6-f907-4b0c-bde1-a07991bb63cb
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Dinosaur Ski Game
+  projectName: test
   organizationId: elham2020
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

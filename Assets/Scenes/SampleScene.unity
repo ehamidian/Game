@@ -829,7 +829,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loudnessThreshold: 0.1
   updateDelay: 2
-  MicrophoneSettings: {fileID: 1506300133}
+  MicrophoneSettings: {fileID: 1506300135}
 --- !u!4 &410995502
 Transform:
   m_ObjectHideFlags: 0
@@ -927,7 +927,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 459044476}
-  - component: {fileID: 459044475}
+  - component: {fileID: 459044477}
   m_Layer: 0
   m_Name: PitchDetection
   m_TagString: Untagged
@@ -935,21 +935,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &459044475
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 459044474}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8274c109b8f129488f1c873db7470e8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pitchThreshold: 1000
-  updateDelay: 0.1
-  MicrophoneSettings: {fileID: 1506300133}
 --- !u!4 &459044476
 Transform:
   m_ObjectHideFlags: 0
@@ -965,6 +950,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &459044477
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 459044474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8274c109b8f129488f1c873db7470e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pitchThreshold: 1000
+  updateDelay: 0.1
+  MicrophoneSettings: {fileID: 1506300135}
 --- !u!1001 &476388218
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2151,7 +2151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loudnessDetector: {fileID: 410995501}
-  pitchDetector: {fileID: 459044475}
+  pitchDetector: {fileID: 0}
   forwardSpeed: 10
   lateralSpeed: 3
   jumpForce: 5
@@ -2548,13 +2548,13 @@ PrefabInstance:
       addedObject: {fileID: 1315882705}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1315882706}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1315882707}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1315882708}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1315882709}
     - targetCorrespondingSourceObject: {fileID: -9034929185154555071, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1405475056}
@@ -2596,24 +2596,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1315882706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315882702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c560df5c745d54a8c2d0758a16753c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  loudnessDetector: {fileID: 410995501}
-  pitchDetector: {fileID: 459044475}
-  forwardSpeed: 20
-  lateralSpeed: 3
-  jumpForce: 5
-  playerScore: {fileID: 1464194434}
 --- !u!114 &1315882707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2647,6 +2629,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1315882709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1315882702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76c560df5c745d54a8c2d0758a16753c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  loudnessDetector: {fileID: 410995501}
+  pitchDetector: {fileID: 459044477}
+  forwardSpeed: 5
+  lateralSpeed: 3
+  jumpForce: 10
+  playerScore: {fileID: 1464194434}
 --- !u!1 &1405475052 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -9034929185154555071, guid: ef45c8cee12355c45ba3ba698767b8ac, type: 3}
@@ -2727,7 +2727,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1506300134}
-  - component: {fileID: 1506300133}
+  - component: {fileID: 1506300135}
   m_Layer: 0
   m_Name: MicrophoneSettings
   m_TagString: Untagged
@@ -2735,18 +2735,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1506300133
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1506300132}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9df76edf9539e47419f997b73c1e9a6d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1506300134
 Transform:
   m_ObjectHideFlags: 0
@@ -2762,6 +2750,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1506300135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506300132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df76edf9539e47419f997b73c1e9a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1534524798
 PrefabInstance:
   m_ObjectHideFlags: 0

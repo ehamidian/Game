@@ -3,48 +3,39 @@ using UnityEngine;
 public class MicrophoneSettings : MonoBehaviour
 {
 
-    public string[] Microphones { get; private set; }
-    public AudioSource LeftAudioSource { get; private set; }
-    public AudioSource RightAudioSource { get; private set; }
-
+    public string[] Microphones;
+    public AudioSource audioSourceLeft;
+    public AudioSource audioSourceRight;
     // Start is called before the first frame update
     void Start()
     {
+        InitialMicrophone();
+    }
+    private void InitialMicrophone()
+    {
         Microphones = Microphone.devices;
 
-        if (Microphones.Length >= 2)
+        if (Microphones.Length > 0)
         {
-            InitializeMicrophones();
+            audioSourceLeft = gameObject.AddComponent<AudioSource>();
+            audioSourceLeft.clip = Microphone.Start(Microphones[0], true, 10, AudioSettings.outputSampleRate);
+            audioSourceLeft.loop = true;
 
-            // Left audio source
-            LeftAudioSource = gameObject.AddComponent<AudioSource>();
-            LeftAudioSource.clip = Microphone.Start(Microphones[0], true, 10, AudioSettings.outputSampleRate);
-            LeftAudioSource.loop = true;
-
-            // Right audio source
-            RightAudioSource = gameObject.AddComponent<AudioSource>();
-            RightAudioSource.clip = Microphone.Start(Microphones[1], true, 10, AudioSettings.outputSampleRate);
-            RightAudioSource.loop = true;
+            audioSourceRight = gameObject.AddComponent<AudioSource>();
+            audioSourceRight.clip = Microphone.Start(Microphones[1], true, 10, AudioSettings.outputSampleRate);
+            audioSourceRight.loop = true;
 
             while (!(Microphone.GetPosition(null) > 0)) { } // Wait until the microphone has started
 
-            if (Microphone.GetPosition(null) > 0)
-            {
-                LeftAudioSource.Play();
-                RightAudioSource.Play();
-            }
-            else
-            {
-                Debug.LogError("Microphone not started!");
-            }
-        }
-    }
+            audioSourceLeft.Play();
+            audioSourceRight.Play();
 
-    void InitializeMicrophones()
-    {
-        foreach (var microphone in Microphones)
+            for (int i = 0; i < Microphones.Length; i++)
+                Debug.Log($"Mic: {Microphones[i]} is available!");
+        }
+        else
         {
-            Debug.Log($"Mic {microphone} is available");
+            Debug.LogError("No microphone available!");
         }
     }
 }

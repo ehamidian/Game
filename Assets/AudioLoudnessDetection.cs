@@ -2,21 +2,28 @@ using UnityEngine;
 
 public class AudioLoudnessDetection : MonoBehaviour
 {
-    private string[] microphones;
-    private AudioClip leftMicrophoneClip;
-    private AudioClip rightMicrophoneClip;
     private float lastUpdateTime;
-    private readonly int sampleWindow = 32;
+    private int lastDirection = 2;
+    private readonly int sampleWindow = 64;
+    private MicrophoneSettings microphoneSettings;
+    private string[] Microphones;
+
+    private AudioSource audioSourceLeft;
+    private AudioSource audioSourceRight;
 
     public float loudnessThreshold = 0.1f;
     public float updateDelay = 2f; // Delay in seconds before checking for direction
-    public MicrophoneSettings MicrophoneSettings;
 
     void Start()
     {
-        microphones = MicrophoneSettings.Microphones;
-        leftMicrophoneClip = MicrophoneSettings.LeftAudioSource.clip;
-        rightMicrophoneClip = MicrophoneSettings.RightAudioSource.clip;
+        microphoneSettings = GetComponent<MicrophoneSettings>();
+
+        if (microphoneSettings != null)
+        {
+            Microphones = microphoneSettings.Microphones;
+            audioSourceLeft = microphoneSettings.audioSourceLeft;
+            audioSourceRight = microphoneSettings.audioSourceRight;
+        }
 
         lastUpdateTime = Time.time;
     }
@@ -27,44 +34,44 @@ public class AudioLoudnessDetection : MonoBehaviour
         if (Time.time - lastUpdateTime < updateDelay)
             return;
 
-        int direction = GetDirection();
+        int currentDirection = GetDirection();
 
-        // Perform actions based on direction
-        if (direction == -1)
+        if (currentDirection != lastDirection)
         {
-            // Move left
-            Debug.Log("Move to the left");
-        }
-        else if (direction == 1)
-        {
-            // Move right
-            Debug.Log("Move to the right");
-        }
-        else
-        {
-            // No movement
-            Debug.Log("Stable");
+            // Direction has changed, perform actions
+            lastDirection = currentDirection;
+
+            // Perform actions based on direction
+            if (currentDirection == -1)
+            {
+                // Move left
+                Debug.Log("Move to the left");
+            }
+            else if (currentDirection == 1)
+            {
+                // Move right
+                Debug.Log("Move to the right");
+            }
+            else
+            {
+                // No movement
+                Debug.Log("Stable");
+            }
         }
 
         // Update last update time
         lastUpdateTime = Time.time;
     }
 
-    //private void MicrophoneToAudioClip(string microphoneName, out AudioClip microphoneClip)
-    //{
-    //    microphoneClip = Microphone.Start(microphoneName, true, 10, AudioSettings.outputSampleRate);
-    //}
-
     public int GetDirection()
     {
-        float leftLoudness = GetLoudness(microphones[0], leftMicrophoneClip);
-        float rightLoudness = GetLoudness(microphones[1], rightMicrophoneClip);
+        float leftLoudness = GetLoudness(Microphones[0], audioSourceLeft.clip);
+        float rightLoudness = GetLoudness(Microphones[1], audioSourceRight.clip);
 
-        // Add debug statements to identify the left and right microphones
-        Debug.Log("Left Microphone Loudness: " + microphones[0]);
-        Debug.Log("Right Microphone Loudness: " + microphones[1]);
 
-        if (leftLoudness > loudnessThreshold && rightLoudness > loudnessThreshold)
+        float dynamicThreshold = Mathf.Max(leftLoudness, rightLoudness);
+
+        if (dynamicThreshold > loudnessThreshold)
         {
             // Both sides have loudness, choose the louder side
             return leftLoudness > rightLoudness ? -1 : 1;
@@ -93,16 +100,15 @@ public class AudioLoudnessDetection : MonoBehaviour
 
     private float GetLoudnessFromAudioClip(int clipPosition, AudioClip clip)
     {
+        float totalLoudness = 0;
         int startPosition = clipPosition - sampleWindow;
+        float[] waveData = new float[sampleWindow];
 
         if (startPosition < 0)
             return 0;
 
-        float[] waveData = new float[sampleWindow];
         clip.GetData(waveData, startPosition);
 
-        // Compute loudness
-        float totalLoudness = 0;
 
         for (int i = 0; i < sampleWindow; i++)
         {
@@ -111,4 +117,5 @@ public class AudioLoudnessDetection : MonoBehaviour
 
         return totalLoudness / sampleWindow;
     }
+
 }

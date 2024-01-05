@@ -2,76 +2,24 @@ using UnityEngine;
 
 public class AudioLoudnessDetection : MonoBehaviour
 {
-    private float lastUpdateTime;
-    private int lastDirection = 2;
-    private readonly int sampleWindow = 64;
-    private MicrophoneSettings microphoneSettings;
-    private string[] Microphones;
-
-    private AudioSource audioSourceLeft;
-    private AudioSource audioSourceRight;
-
-    public float loudnessThreshold = 0.1f;
-    public float updateDelay = 2f; // Delay in seconds before checking for direction
-
-    void Start()
+    public int GetDirection(string mic1, string mic2, AudioClip audioClipLeft, AudioClip audioClipRight)
     {
-        microphoneSettings = GetComponent<MicrophoneSettings>();
+        float loudnessThreshold = 0.1f;
 
-        if (microphoneSettings != null)
+        if (audioClipLeft == null || audioClipRight == null)
         {
-            Microphones = microphoneSettings.Microphones;
-            audioSourceLeft = microphoneSettings.audioSourceLeft;
-            audioSourceRight = microphoneSettings.audioSourceRight;
+            Debug.LogError("Something is wrong with the microphones!");
+            return 0;
         }
 
-        lastUpdateTime = Time.time;
-    }
-
-    void Update()
-    {
-        // Check for update delay
-        if (Time.time - lastUpdateTime < updateDelay)
-            return;
-
-        int currentDirection = GetDirection();
-
-        if (currentDirection != lastDirection)
-        {
-            // Direction has changed, perform actions
-            lastDirection = currentDirection;
-
-            // Perform actions based on direction
-            if (currentDirection == -1)
-            {
-                // Move left
-                Debug.Log("Move to the left");
-            }
-            else if (currentDirection == 1)
-            {
-                // Move right
-                Debug.Log("Move to the right");
-            }
-            else
-            {
-                // No movement
-                Debug.Log("Stable");
-            }
-        }
-
-        // Update last update time
-        lastUpdateTime = Time.time;
-    }
-
-    public int GetDirection()
-    {
-        float leftLoudness = GetLoudness(Microphones[0], audioSourceLeft.clip);
-        float rightLoudness = GetLoudness(Microphones[1], audioSourceRight.clip);
+        float leftLoudness = GetLoudness(mic1, audioClipLeft);
+        float rightLoudness = GetLoudness(mic2, audioClipRight);
 
 
-        float dynamicThreshold = Mathf.Max(leftLoudness, rightLoudness);
+        float dynamicLoudness = Mathf.Max(leftLoudness, rightLoudness);
 
-        if (dynamicThreshold > loudnessThreshold)
+
+        if (dynamicLoudness > loudnessThreshold)
         {
             // Both sides have loudness, choose the louder side
             return leftLoudness > rightLoudness ? -1 : 1;
@@ -100,7 +48,8 @@ public class AudioLoudnessDetection : MonoBehaviour
 
     private float GetLoudnessFromAudioClip(int clipPosition, AudioClip clip)
     {
-        float totalLoudness = 0;
+        int sampleWindow = 64;
+        float totalLoudness = 0f;
         int startPosition = clipPosition - sampleWindow;
         float[] waveData = new float[sampleWindow];
 
@@ -117,5 +66,4 @@ public class AudioLoudnessDetection : MonoBehaviour
 
         return totalLoudness / sampleWindow;
     }
-
 }

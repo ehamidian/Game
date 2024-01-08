@@ -38,8 +38,25 @@ public class GameMechanic : MonoBehaviour
 
     void Update()
     {
+        int direction;
+
         if (!playerScore.IsGameOver())
         {
+            if (!isJumping && isGrounded)
+            {
+                // Get the direction from the AudioLoudnessDetection script
+                direction = loudnessDetector.GetDirection(selectedMicrophone1, selectedMicrophone2,
+                microphoneSettings.audioSourceLeft.clip, microphoneSettings.audioSourceRight.clip);
+
+                // Move the player based on voice direction
+                MovePlayer(direction);
+            }
+            else
+            {
+                // Jumping, no direction
+                direction = 0;
+            }
+
             // Check for continuous speech recognition
             if (keywordRecognizer != null && keywordRecognizer.IsRunning)
             {
@@ -48,14 +65,6 @@ public class GameMechanic : MonoBehaviour
                     Jump();
                 }
             }
-
-            // Get the direction from the AudioLoudnessDetection script
-            int direction = loudnessDetector.GetDirection(selectedMicrophone1, selectedMicrophone2,
-                microphoneSettings.audioSourceLeft.clip, microphoneSettings.audioSourceRight.clip);
-
-            // Move the player based on voice direction
-            MovePlayer(direction);
-            
 
             // Perform actions based on direction
             if (direction != lastDirection)
@@ -85,64 +94,23 @@ public class GameMechanic : MonoBehaviour
 
     void MovePlayer(int direction)
     {
-        if (!isJumping)
+        // Move the player based on voice direction
+        if (direction == -1)
         {
-            // Move the player based on voice direction
-            if (direction == -1)
-            {
-                rb.velocity = new Vector3(-lateralSpeed, rb.velocity.y, forwardSpeed);
-            }
-            else if (direction == 1)
-            {
-                rb.velocity = new Vector3(lateralSpeed, rb.velocity.y, forwardSpeed);
-            }
-            else
-            {
-                // No lateral movement if direction is 0
-                rb.velocity = new Vector3(0, rb.velocity.y, forwardSpeed);
-            }
+            rb.velocity = new Vector3(-lateralSpeed, rb.velocity.y, forwardSpeed);
+        }
+        else if (direction == 1)
+        {
+            rb.velocity = new Vector3(lateralSpeed, rb.velocity.y, forwardSpeed);
+        }
+        else
+        {
+            // No lateral movement if direction is 0
+            rb.velocity = new Vector3(0, rb.velocity.y, forwardSpeed);
         }
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-        if (playerScore == null)
-        {
-            Debug.LogError("playerScore is null!");
-            return;
-        }
-
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
-
-        if (collision.gameObject.CompareTag("Candle"))
-        {
-            Debug.Log("Collision with Candle!");
-            playerScore.CollectCandle();
-            Destroy(collision.gameObject);
-        }
-
-        if (collision.gameObject.CompareTag("Box"))
-        {
-            Debug.Log("Collision with Obstacle!");
-            playerScore.CollideWithBox();
-            Destroy(collision.gameObject);
-
-            // Check for game over after colliding with the box
-            if (playerScore.GetBoxCollisionCount() >= 3)
-            {
-                GameOver();
-            }
-        }
-    }
-
-    void OnCollisionExit(Collision collision)
-    {
-        isGrounded = false;
-    }
-
+    // Speech recognition using keywords
     void InitialKeyRecognition()
     {
         if (keywords == null || keywords.Length == 0)
@@ -167,7 +135,7 @@ public class GameMechanic : MonoBehaviour
         keywordRecognizer.Start();
     }
 
-    private void RecognizedSpeech(PhraseRecognizedEventArgs speech)
+    void RecognizedSpeech(PhraseRecognizedEventArgs speech)
     {
         Debug.Log(speech.text);
 
@@ -177,7 +145,7 @@ public class GameMechanic : MonoBehaviour
         }
     }
 
-    private void Jump()
+    void Jump()
     {
         if (rb != null && isJumping)
         {
@@ -219,5 +187,44 @@ public class GameMechanic : MonoBehaviour
         {
             return;
         }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if (playerScore == null)
+        {
+            Debug.LogError("playerScore is null!");
+            return;
+        }
+
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+
+        if (collision.gameObject.CompareTag("Candle"))
+        {
+            Debug.Log("Collision with Candle!");
+            playerScore.CollectCandle();
+            Destroy(collision.gameObject);
+        }
+
+        if (collision.gameObject.CompareTag("Box"))
+        {
+            Debug.Log("Collision with Obstacle!");
+            playerScore.CollideWithBox();
+            Destroy(collision.gameObject);
+
+            // Check for game over after colliding with the box
+            if (playerScore.GetBoxCollisionCount() >= 3)
+            {
+                GameOver();
+            }
+        }
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        isGrounded = false;
     }
 }

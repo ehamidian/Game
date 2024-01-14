@@ -2,41 +2,38 @@ using UnityEngine;
 
 public class AudioLoudnessDetection : MonoBehaviour
 {
+    public float loudnessThreshold = 0.2f;
     public int GetDirection(string mic1, string mic2, AudioClip audioClipLeft, AudioClip audioClipRight)
     {
-        float loudnessThreshold = 0.1f;
 
-        if (audioClipLeft == null || audioClipRight == null)
+        if (audioClipLeft && audioClipRight)
         {
-            Debug.LogError("Something is wrong with the microphones!");
-            return 0;
-        }
+            float leftLoudness = GetLoudness(mic1, audioClipLeft);
+            float rightLoudness = GetLoudness(mic2, audioClipRight);
 
-        float leftLoudness = GetLoudness(mic1, audioClipLeft);
-        float rightLoudness = GetLoudness(mic2, audioClipRight);
-
-
-        float dynamicLoudness = Mathf.Max(leftLoudness, rightLoudness);
-
-
-        if (dynamicLoudness > loudnessThreshold)
-        {
-            // Both sides have loudness, choose the louder side
-            return leftLoudness > rightLoudness ? -1 : 1;
-        }
-        else if (leftLoudness > loudnessThreshold)
-        {
-            // Only left side has loudness
-            return -1;
-        }
-        else if (rightLoudness > loudnessThreshold)
-        {
-            // Only right side has loudness
-            return 1;
+            if(leftLoudness >  loudnessThreshold && rightLoudness> loudnessThreshold)
+            {
+                return 0;
+            }
+            else if (leftLoudness > rightLoudness + loudnessThreshold)
+            {
+                // Only left side has loudness
+                return -1;
+            }
+            else if (rightLoudness > leftLoudness + loudnessThreshold)
+            {
+                // Only right side has loudness
+                return 1;
+            }
+            else
+            {
+                // No movement
+                return 0;
+            }
         }
         else
         {
-            // No movement
+            Debug.LogError("Microphones not assigned!");
             return 0;
         }
     }

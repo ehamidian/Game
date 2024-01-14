@@ -9,14 +9,15 @@ public class GameMechanic : MonoBehaviour
     private string selectedMicrophone1;
     private string selectedMicrophone2;
     private int lastDirection = 2;
-    private string[] keywords = { "jump" };
+    private string[] keywords = new string[] { "up" };
+
+    protected string word = "";
 
     public AudioLoudnessDetection loudnessDetector;
     public MicrophoneSettings microphoneSettings;
     public PlayerScore playerScore; // Reference to the PlayerScore script
     public FollowPlayer followPlayer; // Reference to the FollowPlayer script
 
-    public float movementSpeed = 100f;
     public float jumpForce = 10f;
     public float forwardSpeed = 5f;
     public float lateralSpeed = 10f;
@@ -31,64 +32,55 @@ public class GameMechanic : MonoBehaviour
         if (microphoneSettings == null || loudnessDetector == null) Debug.LogError("Null object!");
 
         selectedMicrophone1 = microphoneSettings.Microphones[0];
-        selectedMicrophone2 = microphoneSettings.Microphones[1];
+        selectedMicrophone2 = microphoneSettings.Microphones[2];
 
         InitialKeyRecognition();
     }
 
     void Update()
     {
-        int direction;
-
         if (!playerScore.IsGameOver())
         {
-            if (!isJumping && isGrounded)
+            if (!isJumping)
             {
                 // Get the direction from the AudioLoudnessDetection script
-                direction = loudnessDetector.GetDirection(selectedMicrophone1, selectedMicrophone2,
+                int direction = loudnessDetector.GetDirection(selectedMicrophone1, selectedMicrophone2,
                 microphoneSettings.audioSourceLeft.clip, microphoneSettings.audioSourceRight.clip);
 
                 // Move the player based on voice direction
                 MovePlayer(direction);
-            }
-            else
-            {
-                // Jumping, no direction
-                direction = 0;
-            }
-
-            // Check for continuous speech recognition
-            if (keywordRecognizer != null && keywordRecognizer.IsRunning)
-            {
-                if (isJumping && isGrounded)
-                {
-                    Jump();
-                }
-            }
-
-            // Perform actions based on direction
-            if (direction != lastDirection)
-            {
-                // Direction has changed, perform actions
-                lastDirection = direction;
 
                 // Perform actions based on direction
-                if (direction == -1)
+                if (direction != lastDirection)
                 {
-                    // Move left
-                    Debug.Log("Move to the left");
-                }
-                else if (direction == 1)
-                {
-                    // Move right
-                    Debug.Log("Move to the right");
-                }
-                else
-                {
-                    // No movement
-                    Debug.Log("Stable");
+                    // Direction has changed, perform actions
+                    lastDirection = direction;
+
+                    // Perform actions based on direction
+                    if (direction == -1)
+                    {
+                        // Move left
+                        Debug.Log("Move to the left");
+                    }
+                    else if (direction == 1)
+                    {
+                        // Move right
+                        Debug.Log("Move to the right");
+                    }
+                    else
+                    {
+                        // No movement
+                        Debug.Log("Stable");
+                    }
                 }
             }
+
+            if (isGrounded)
+            {
+                // Player is jumping, perform jump action
+                Jump();
+            }
+
         }
     }
 
@@ -113,6 +105,8 @@ public class GameMechanic : MonoBehaviour
     // Speech recognition using keywords
     void InitialKeyRecognition()
     {
+        ConfidenceLevel confidence = ConfidenceLevel.Medium;
+
         if (keywords == null || keywords.Length == 0)
         {
             Debug.LogError("No keys in the array keywords.");
@@ -123,7 +117,7 @@ public class GameMechanic : MonoBehaviour
             Debug.Log($"The key is: {keywords[0]}");
         }
 
-        keywordRecognizer = new KeywordRecognizer(keywords);
+        keywordRecognizer = new KeywordRecognizer(keywords, confidence);
 
         if (keywordRecognizer == null)
         {
@@ -137,9 +131,10 @@ public class GameMechanic : MonoBehaviour
 
     void RecognizedSpeech(PhraseRecognizedEventArgs speech)
     {
-        Debug.Log(speech.text);
+        word = speech.text;
+        Debug.Log(word);
 
-        if (speech.text == "jump")
+        if (word == "up")
         {
             isJumping = true;
         }
@@ -149,7 +144,8 @@ public class GameMechanic : MonoBehaviour
     {
         if (rb != null && isJumping)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            // rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            rb.velocity = new Vector3(rb.velocity.x, jumpForce, forwardSpeed);
             isJumping = false; // Reset the jump flag after performing the jump
         }
     }
@@ -181,6 +177,7 @@ public class GameMechanic : MonoBehaviour
         // Stop the KeywordRecognizer when the script is destroyed or when it's no longer needed.
         if (keywordRecognizer != null && keywordRecognizer.IsRunning)
         {
+            keywordRecognizer.OnPhraseRecognized -= RecognizedSpeech;
             keywordRecognizer.Stop();
         }
         else

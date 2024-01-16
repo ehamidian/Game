@@ -20,12 +20,12 @@ public class MicrophoneSettings : MonoBehaviour
         if (Microphones.Length > 0)
         {
             audioSourceLeft = gameObject.AddComponent<AudioSource>();
-            audioSourceLeft.clip = Microphone.Start(Microphones[0], true, 10, AudioSettings.outputSampleRate);
+            audioSourceLeft.clip = Microphone.Start(Microphones[0], true, 10, 48000);
             audioSourceLeft.loop = true;
             audioSourceLeft.mute = true;
 
             audioSourceRight = gameObject.AddComponent<AudioSource>();
-            audioSourceRight.clip = Microphone.Start(Microphones[1], true, 10, AudioSettings.outputSampleRate);
+            audioSourceRight.clip = Microphone.Start(Microphones[1], true, 10, 48000);
             audioSourceRight.loop = true;
             audioSourceRight.mute = true;
 
@@ -41,6 +41,14 @@ public class MicrophoneSettings : MonoBehaviour
         else
         {
             Debug.LogError("No microphone is available!");
+        }
+    }
+
+    void OnDisable()
+    {
+        foreach(string mic in Microphones)
+        {
+            Microphone.End(mic);
         }
     }
 }

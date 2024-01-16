@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Windows.Speech;
 
+[RequireComponent(typeof(Rigidbody))]
 public class GameMechanic : MonoBehaviour
 {
     private Rigidbody rb;
@@ -15,8 +16,8 @@ public class GameMechanic : MonoBehaviour
 
     public AudioLoudnessDetection loudnessDetector;
     public MicrophoneSettings microphoneSettings;
-    public PlayerScore playerScore; // Reference to the PlayerScore script
-    public FollowPlayer followPlayer; // Reference to the FollowPlayer script
+    public PlayerScore playerScore;
+    public FollowPlayer followPlayer; 
 
     public float jumpForce = 10f;
     public float forwardSpeed = 5f;
@@ -32,7 +33,7 @@ public class GameMechanic : MonoBehaviour
         if (microphoneSettings == null || loudnessDetector == null) Debug.LogError("Null object!");
 
         selectedMicrophone1 = microphoneSettings.Microphones[0];
-        selectedMicrophone2 = microphoneSettings.Microphones[2];
+        selectedMicrophone2 = microphoneSettings.Microphones[1];
 
         InitialKeyRecognition();
     }
@@ -75,7 +76,7 @@ public class GameMechanic : MonoBehaviour
                 }
             }
 
-            if (isGrounded)
+            if (isGrounded && isJumping)
             {
                 // Player is jumping, perform jump action
                 Jump();
@@ -89,10 +90,14 @@ public class GameMechanic : MonoBehaviour
         // Move the player based on voice direction
         if (direction == -1)
         {
+            if(isGrounded)
+                SoundEFManager.instance.PlaySoundEffect("move");
             rb.velocity = new Vector3(-lateralSpeed, rb.velocity.y, forwardSpeed);
         }
         else if (direction == 1)
         {
+            if (isGrounded)
+                SoundEFManager.instance.PlaySoundEffect("move");
             rb.velocity = new Vector3(lateralSpeed, rb.velocity.y, forwardSpeed);
         }
         else
@@ -142,11 +147,12 @@ public class GameMechanic : MonoBehaviour
 
     void Jump()
     {
-        if (rb != null && isJumping)
+        if (rb != null)
         {
             // rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             rb.velocity = new Vector3(rb.velocity.x, jumpForce, forwardSpeed);
             isJumping = false; // Reset the jump flag after performing the jump
+            SoundEFManager.instance.PlaySoundEffect("jump");
         }
     }
 
@@ -199,10 +205,16 @@ public class GameMechanic : MonoBehaviour
             isGrounded = true;
         }
 
+        if (collision.gameObject.CompareTag("Mountain"))
+        {
+            SoundEFManager.instance.PlaySoundEffect("mountain");
+        }
+
         if (collision.gameObject.CompareTag("Candle"))
         {
             Debug.Log("Collision with Candle!");
             playerScore.CollectCandle();
+            SoundEFManager.instance.PlaySoundEffect("flame");
             Destroy(collision.gameObject);
         }
 
@@ -210,11 +222,13 @@ public class GameMechanic : MonoBehaviour
         {
             Debug.Log("Collision with Obstacle!");
             playerScore.CollideWithBox();
+            SoundEFManager.instance.PlaySoundEffect("hit");
             Destroy(collision.gameObject);
 
             // Check for game over after colliding with the box
             if (playerScore.GetBoxCollisionCount() >= 3)
             {
+                SoundEFManager.instance.PlaySoundEffect("lose");
                 GameOver();
             }
         }

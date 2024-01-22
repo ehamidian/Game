@@ -1,159 +1,95 @@
 using UnityEngine;
-using UnityEngine.Windows.Speech;
 
 [RequireComponent(typeof(Rigidbody))]
 public class GameMechanic : MonoBehaviour
 {
     private Rigidbody rb;
-    private bool isJumping = false;
-    private KeywordRecognizer keywordRecognizer;
-    private string selectedMicrophone1;
-    private string selectedMicrophone2;
-    private int lastDirection = 2;
-    private string[] keywords = new string[] { "up" };
+    //private int lastDirection = 2;
 
-    protected string word = "";
-
-    public AudioLoudnessDetection loudnessDetector;
-    public MicrophoneSettings microphoneSettings;
     public PlayerScore playerScore;
-    public FollowPlayer followPlayer; 
+    public FollowPlayer followPlayer;
 
-    public float jumpForce = 10f;
-    public float forwardSpeed = 5f;
-    public float lateralSpeed = 10f;
-    private bool isGrounded = false;
+    //public float lateralSpeed = 100f;
+    public float forwardSpeed = 20f;
+    public float scaleFactor = 3.0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true; // Ensure rotation is frozen
         rb.useGravity = true;
-
-        if (microphoneSettings == null || loudnessDetector == null) Debug.LogError("Null object!");
-
-        selectedMicrophone1 = microphoneSettings.Microphones[0];
-        selectedMicrophone2 = microphoneSettings.Microphones[1];
-
-        InitialKeyRecognition();
     }
 
     void Update()
     {
         if (!playerScore.IsGameOver())
         {
-            if (!isJumping)
-            {
-                // Get the direction from the AudioLoudnessDetection script
-                int direction = loudnessDetector.GetDirection(selectedMicrophone1, selectedMicrophone2,
-                microphoneSettings.audioSourceLeft.clip, microphoneSettings.audioSourceRight.clip);
+            int loudness = AudioLoudnessDetection.Instance.audioLoudness;
 
-                // Move the player based on voice direction
-                MovePlayer(direction);
-
-                // Perform actions based on direction
-                if (direction != lastDirection)
-                {
-                    // Direction has changed, perform actions
-                    lastDirection = direction;
-
-                    // Perform actions based on direction
-                    if (direction == -1)
-                    {
-                        // Move left
-                        Debug.Log("Move to the left");
-                    }
-                    else if (direction == 1)
-                    {
-                        // Move right
-                        Debug.Log("Move to the right");
-                    }
-                    else
-                    {
-                        // No movement
-                        Debug.Log("Stable");
-                    }
-                }
-            }
-
-            if (isGrounded && isJumping)
-            {
-                // Player is jumping, perform jump action
-                Jump();
-            }
-
+            MovePlayer(loudness);
         }
     }
 
-    void MovePlayer(int direction)
+    // Move the player based on voice direction
+    void MovePlayer(int loudness)
     {
-        // Move the player based on voice direction
-        if (direction == -1)
-        {
-            if(isGrounded)
-                SoundEFManager.instance.PlaySoundEffect("move");
-            rb.velocity = new Vector3(-lateralSpeed, rb.velocity.y, forwardSpeed);
-        }
-        else if (direction == 1)
-        {
-            if (isGrounded)
-                SoundEFManager.instance.PlaySoundEffect("move");
-            rb.velocity = new Vector3(lateralSpeed, rb.velocity.y, forwardSpeed);
-        }
-        else
-        {
-            // No lateral movement if direction is 0
-            rb.velocity = new Vector3(0, rb.velocity.y, forwardSpeed);
-        }
-    }
+        float targetLateralVelocity = 0f;
+        float lateralSpeed = 100f;
 
-    // Speech recognition using keywords
-    void InitialKeyRecognition()
-    {
-        ConfidenceLevel confidence = ConfidenceLevel.Medium;
+        //if (loudness == 1)
+        //{
+        //    SoundEFManager.instance.PlaySoundEffect("move");
+        //    Debug.Log("Moving left");
+        //    rb.velocity = new Vector3(-lateralSpeed, rb.velocity.y, forwardSpeed);
+        //}
+        //else if (loudness == 2)
+        //{
+        //    SoundEFManager.instance.PlaySoundEffect("move");
+        //    Debug.Log("Moving right");
+        //    rb.velocity = new Vector3(lateralSpeed, rb.velocity.y, forwardSpeed);
+        //}
+        //else
+        //{
+        //    // No lateral movement if direction is 0
+        //    rb.velocity = new Vector3(0, rb.velocity.y, forwardSpeed);
+        //}
 
-        if (keywords == null || keywords.Length == 0)
+        switch (loudness)
         {
-            Debug.LogError("No keys in the array keywords.");
-            return;
+            case 1:
+                targetLateralVelocity = -lateralSpeed;
+                break;
+            case 2:
+                targetLateralVelocity = -lateralSpeed * 2;
+                break;
+            case 3:
+                targetLateralVelocity = -lateralSpeed * 3;
+                break;
+            case 4:
+                targetLateralVelocity = lateralSpeed;
+                break;
+            case 5:
+                targetLateralVelocity = lateralSpeed * 2;
+                break;
+            case 6:
+                targetLateralVelocity = lateralSpeed * 3;
+                break;
+            default:
+                targetLateralVelocity = 0;
+                break;
         }
-        else
+        
+        if(loudness != 0)
         {
-            Debug.Log($"The key is: {keywords[0]}");
+            SoundEFManager.instance.PlaySoundEffect("move");
         }
 
-        keywordRecognizer = new KeywordRecognizer(keywords, confidence);
+        // Use Mathf.Sign to ensure the correct sign for the lateral velocity
+        targetLateralVelocity *= Mathf.Sign(transform.localScale.x);
 
-        if (keywordRecognizer == null)
-        {
-            Debug.LogError("KeywordRecognizer is null.");
-            return;
-        }
-
-        keywordRecognizer.OnPhraseRecognized += RecognizedSpeech;
-        keywordRecognizer.Start();
-    }
-
-    void RecognizedSpeech(PhraseRecognizedEventArgs speech)
-    {
-        word = speech.text;
-        Debug.Log(word);
-
-        if (word == "up")
-        {
-            isJumping = true;
-        }
-    }
-
-    void Jump()
-    {
-        if (rb != null)
-        {
-            // rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            rb.velocity = new Vector3(rb.velocity.x, jumpForce, forwardSpeed);
-            isJumping = false; // Reset the jump flag after performing the jump
-            SoundEFManager.instance.PlaySoundEffect("jump");
-        }
+        // Gradually interpolate between current and target velocities
+        Vector3 targetVelocity = new Vector3(targetLateralVelocity, 0, forwardSpeed);
+        rb.velocity = Vector3.Lerp(rb.velocity, targetVelocity, Time.deltaTime * scaleFactor);
     }
 
     void GameOver()
@@ -178,31 +114,12 @@ public class GameMechanic : MonoBehaviour
         followPlayer.enabled = false;
     }
 
-    void OnDestroy()
-    {
-        // Stop the KeywordRecognizer when the script is destroyed or when it's no longer needed.
-        if (keywordRecognizer != null && keywordRecognizer.IsRunning)
-        {
-            keywordRecognizer.OnPhraseRecognized -= RecognizedSpeech;
-            keywordRecognizer.Stop();
-        }
-        else
-        {
-            return;
-        }
-    }
-
     void OnCollisionEnter(Collision collision)
     {
         if (playerScore == null)
         {
             Debug.LogError("playerScore is null!");
             return;
-        }
-
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
         }
 
         if (collision.gameObject.CompareTag("Mountain"))
@@ -212,30 +129,31 @@ public class GameMechanic : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Candle"))
         {
-            Debug.Log("Collision with Candle!");
+            //Debug.Log("Collision with Candle!");
             playerScore.CollectCandle();
             SoundEFManager.instance.PlaySoundEffect("flame");
+
+            if (playerScore.ValidateFlameCollision())
+            {
+                forwardSpeed += 5f;
+            }
+
             Destroy(collision.gameObject);
         }
 
         if (collision.gameObject.CompareTag("Box"))
         {
-            Debug.Log("Collision with Obstacle!");
+            //Debug.Log("Collision with Obstacle!");
             playerScore.CollideWithBox();
             SoundEFManager.instance.PlaySoundEffect("hit");
             Destroy(collision.gameObject);
 
             // Check for game over after colliding with the box
-            if (playerScore.GetBoxCollisionCount() >= 3)
+            if (playerScore.ValidateBoxCollision())
             {
                 SoundEFManager.instance.PlaySoundEffect("lose");
                 GameOver();
             }
         }
-    }
-
-    void OnCollisionExit(Collision collision)
-    {
-        isGrounded = false;
     }
 }

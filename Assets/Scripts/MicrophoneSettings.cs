@@ -2,51 +2,66 @@ using UnityEngine;
 
 public class MicrophoneSettings : MonoBehaviour
 {
-    public string[] Microphones;
-    public AudioSource audioSourceLeft;
-    public AudioSource audioSourceRight;
+    private string[] devices;
+    public AudioSource audioSource1;
+    public AudioSource audioSource2;
+    public string mic1 = "";
+    public string mic2 = "";
 
     void Start()
     {
-        //audioSource = gameObject.AddComponent<AudioSource>();
-        InitialMicrophone();
+        audioSource1 = gameObject.AddComponent<AudioSource>();
+        audioSource2 = gameObject.AddComponent<AudioSource>();
+
+        InitializeMicrophone();
     }
 
-    // Get two separate microphones
-    public void InitialMicrophone()
+    void InitializeMicrophone()
     {
-        Microphones = Microphone.devices;
+        devices = Microphone.devices;
 
-        if (Microphones.Length > 0)
+        if (devices.Length > 0)
         {
-            audioSourceLeft = gameObject.AddComponent<AudioSource>();
-            audioSourceLeft.clip = Microphone.Start(Microphones[0], true, 10, 48000);
-            audioSourceLeft.loop = true;
-            audioSourceLeft.mute = true;
 
-            audioSourceRight = gameObject.AddComponent<AudioSource>();
-            audioSourceRight.clip = Microphone.Start(Microphones[1], true, 10, 48000);
-            audioSourceRight.loop = true;
-            audioSourceRight.mute = true;
+            for (int i = 0; i < devices.Length; i++)
+            {
+                if (devices[i].Contains("PnP"))
+                {
+                    mic1 = devices[i];
+                    Debug.Log("Left Microphone:" + mic1);
+                }
+                else if (devices[i].Contains("USB Audio Device"))
+                {
+                    mic2 = devices[i];
+                    Debug.Log("Right Microphone:" + mic2);
+                }
+            }
 
-            while (!(Microphone.GetPosition(null) > 0)) { } // Wait until the microphone has started
+            audioSource1.clip = Microphone.Start(mic1, true, 10, AudioSettings.outputSampleRate);
+            audioSource1.loop = true;
+            audioSource1.mute = true;
 
-            audioSourceLeft.Play();
-            audioSourceRight.Play();
+            audioSource2.clip = Microphone.Start(mic2, true, 10, AudioSettings.outputSampleRate);
+            audioSource2.loop = true;
+            audioSource2.mute = true;
 
-            for (int i = 0; i < Microphones.Length; i++)
-                Debug.Log($"Mic {i}: {Microphones[i]} is available!");
+            while (!(Microphone.GetPosition(null) > 0)) { }
 
+            audioSource1.Play();
+            audioSource2.Play();
+
+            AudioLoudnessDetection.Instance.audioSources = new AudioSource[] { audioSource1, audioSource2 };
+            AudioLoudnessDetection.Instance.devices = new string[] { mic1, mic2 };
         }
         else
         {
-            Debug.LogError("No microphone is available!");
+            Debug.Log("No microphone detected");
         }
     }
 
     void OnDisable()
     {
-        foreach(string mic in Microphones)
+        foreach(string mic in devices)
         {
             Microphone.End(mic);
         }

@@ -2,40 +2,57 @@ using UnityEngine;
 
 public class AudioLoudnessDetection : MonoBehaviour
 {
-    public float loudnessThreshold = 0.2f;
-    public int GetDirection(string mic1, string mic2, AudioClip audioClipLeft, AudioClip audioClipRight)
+    public static AudioLoudnessDetection Instance;
+    public AudioSource[] audioSources;
+    public string[] devices;
+    public int audioLoudness = 0;
+
+    private float leftLoudness = 0f;
+    private float rightLoudness = 0f;
+
+    private void Start()
     {
-
-        if (audioClipLeft && audioClipRight)
+        if (Instance == null)
         {
-            float leftLoudness = GetLoudness(mic1, audioClipLeft);
-            float rightLoudness = GetLoudness(mic2, audioClipRight);
-
-            if(leftLoudness >  loudnessThreshold && rightLoudness> loudnessThreshold)
-            {
-                return 0;
-            }
-            else if (leftLoudness > rightLoudness + loudnessThreshold)
-            {
-                // Only left side has loudness
-                return -1;
-            }
-            else if (rightLoudness > leftLoudness + loudnessThreshold)
-            {
-                // Only right side has loudness
-                return 1;
-            }
-            else
-            {
-                // No movement
-                return 0;
-            }
+            Instance = this;
         }
-        else
-        {
-            Debug.LogError("Microphones not assigned!");
+        if (audioSources == null)
+            Debug.LogError("AudioSources are not set!");
+    }
+
+    private void Update()
+    {
+        leftLoudness = GetLoudness(devices[0], audioSources[0].clip);
+        rightLoudness = GetLoudness(devices[1], audioSources[1].clip);
+        audioLoudness = GetDirection(leftLoudness, rightLoudness);
+    }
+
+    public int GetDirection(float leftLoudness, float rightLoudness)
+    {
+        float loudnessThreshold1 = 0.1f;
+        float loudnessThreshold2 = 0.2f;
+        float loudnessThreshold3 = 0.3f;
+
+        if (leftLoudness > loudnessThreshold1 && rightLoudness > loudnessThreshold1)
             return 0;
-        }
+
+        // Left side is louder
+        if (leftLoudness > rightLoudness + loudnessThreshold3)
+            return 3;
+        else if (leftLoudness > rightLoudness + loudnessThreshold2)
+            return 2;
+        else if (leftLoudness > rightLoudness + loudnessThreshold1)
+            return 1;
+
+        // Right side is louder
+        if (rightLoudness > leftLoudness + loudnessThreshold3)
+            return 4;
+        else if (rightLoudness > leftLoudness + loudnessThreshold2)
+            return 5;
+        else if (rightLoudness > leftLoudness + loudnessThreshold1)
+            return 6;
+
+        return 0;
     }
 
     private float GetLoudness(string microphoneName, AudioClip clip)

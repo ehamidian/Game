@@ -10,6 +10,7 @@ public class SoundEFManager : MonoBehaviour
     public AudioClip winClip;
     public AudioClip moveClip;
     public AudioClip mountainClip;
+    public AudioClip healthClip;
 
     private AudioSource audioSource;
 
@@ -57,6 +58,10 @@ public class SoundEFManager : MonoBehaviour
         else if(filter=="mountain")
         {
             audioClip = mountainClip;
+        }
+        else if(filter=="health")
+        {
+            audioClip = healthClip;
         }
 
         if(audioClip!=null)

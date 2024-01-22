@@ -8,12 +8,14 @@ public class PlayerScore : MonoBehaviour
     public TextMeshProUGUI gameOverText; // Reference to the game over text UI element
     public TextMeshProUGUI startMessageText; // Reference to the start message text UI element
     public TextMeshProUGUI winMessageText; // Reference to the win message text UI element
-    private int score = 0;
-    private int boxCollisionCount = 0; // Counter for box collisions
-    public int maxBoxCollisions = 3; // Maximum allowed box collisions before game over
+    [SerializeField] HealthBar healthBar;
+    [SerializeField] BulletBar bulletBar;
+
+    private int _score = 0;
+    private int _boxCollisionCount = 0; // Counter for box collisions
+    private int maxBoxCollisions = 5; // Maximum allowed box collisions before game over
+    private int maxFlamesCollision = 5; // Maximum number of candles to collect
     private bool isGameOver = false;
-    [SerializeField] Healthbar healthbar;
-    private int maxHealth = 100;
 
     void Start()
     {
@@ -35,8 +37,14 @@ public class PlayerScore : MonoBehaviour
             winMessageText.gameObject.SetActive(false);
         }
 
+        if(healthBar == null || bulletBar == null)
+        {
+            Debug.LogError("HealthBar or BulletBar is null");
+        }
+
         UpdateScoreText(); // Update the UI text to display the initial score
-        healthbar.SetMaxHealth(maxHealth);
+        healthBar.SetMaxHealth(100);
+        bulletBar.SetMaxBullet(0);
     }
 
     void HideStartMessage()
@@ -50,16 +58,17 @@ public class PlayerScore : MonoBehaviour
     // Call this method when a candle is collected
     public void CollectCandle()
     {
-        score++;
-        healthbar.SetHealth(10, "score");
+        _score++;
+        bulletBar.SetBullet(10);
         UpdateScoreText();
 
-        if (score == 5)
+        if (_score == maxFlamesCollision)
         {
-            ShowWinMessage();
+            //ShowWinMessage();
+            healthBar.SetHealth(10);
         }
 
-        if (score == 1)
+        if (_score == 1)
         {
             // Activate the game over text after the first candle is collected
             if (gameOverText != null)
@@ -74,12 +83,13 @@ public class PlayerScore : MonoBehaviour
     {
         if (!isGameOver)
         {
-            boxCollisionCount++;
-            float health = (float)maxBoxCollisions / (float)boxCollisionCount;
-            healthbar.SetHealth(health);
             //UpdateBoxCollisionText();
+            
+            _boxCollisionCount++;
+            float health = (float)maxBoxCollisions / (float)_boxCollisionCount;
+            healthBar.SetHealth(health, true);
 
-            if (boxCollisionCount >= maxBoxCollisions)
+            if (ValidateBoxCollision())
             {
                 ShowGameOver();
             }
@@ -91,7 +101,7 @@ public class PlayerScore : MonoBehaviour
     {
         if (collectedCandlesText != null)
         {
-            collectedCandlesText.text = "Candles: " + score;
+            collectedCandlesText.text = "Candles: " + _score;
         }
     }
 
@@ -118,16 +128,16 @@ public class PlayerScore : MonoBehaviour
     }
 
     // Show win message
-    private void ShowWinMessage()
-    {
-        if (winMessageText != null)
-        {
-            SoundEFManager.instance.PlaySoundEffect("win");
-            winMessageText.gameObject.SetActive(true);
-        }
+    //private void ShowWinMessage()
+    //{
+    //    if (winMessageText != null)
+    //    {
+    //        SoundEFManager.instance.PlaySoundEffect("win");
+    //        winMessageText.gameObject.SetActive(true);
+    //    }
 
-        // You can perform additional actions when the player wins
-    }
+    //    // You can perform additional actions when the player wins
+    //}
 
     // Check if the game is over
     public bool IsGameOver()
@@ -135,9 +145,15 @@ public class PlayerScore : MonoBehaviour
         return isGameOver;
     }
 
-    // Get the box collision count
-    public int GetBoxCollisionCount()
+    // Validate if the player collided with the maximum allowed boxes
+    public bool ValidateBoxCollision()
     {
-        return boxCollisionCount;
+        return _boxCollisionCount == maxBoxCollisions;
+    }
+
+    // Validate if the player collided with the maximum allowed flames
+    public bool ValidateFlameCollision()
+    {
+        return _score % maxFlamesCollision == 0;
     }
 }
